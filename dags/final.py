@@ -247,8 +247,42 @@ with DAG('final',  # Name of the DAG
     )
 
     
+    # Define the PostgresOperator task
+    saving_churn_modelling_creditscore_table = PostgresOperator(
+        task_id='saving_churn_modelling_creditscore_table',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            COPY churn_modelling_creditscore FROM '/opt/airflow/csv/churn_modelling_creditscore.csv' DELIMITER ','
+            CSV HEADER;
+        '''
+    )
+
+        # Define the PostgresOperator task
+    saving_churn_modelling_exited_age_correlation = PostgresOperator(
+        task_id='saving_churn_modelling_exited_age_correlation',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            COPY churn_modelling_exited_age_correlation FROM '/opt/airflow/csv/churn_modelling_exited_age_correlation.csv' DELIMITER ','
+            CSV HEADER;
+        '''
+    )
+
+
+    # Define the PostgresOperator task
+    saving_churn_modelling_exited_salary_correlation = PostgresOperator(
+        task_id='saving_churn_modelling_exited_salary_correlation',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            COPY churn_modelling_exited_salary_correlation FROM '/opt/airflow/csv/churn_modelling_exited_salary_correlation.csv' DELIMITER ','
+            CSV HEADER;
+        '''
+    )
+
     # Set task dependencies
     creating_churn_modelling_table >> getting_data >> storing_churn_model >> export_to_csv_task
     creating_churn_modelling_creditscore_table >> getting_data
     creating_churn_modelling_exited_age_correlation_table >> getting_data
     creating_churn_modelling_exited_salary_correlation_table >> getting_data
+    export_to_csv_task >> saving_churn_modelling_creditscore_table
+    export_to_csv_task >> saving_churn_modelling_exited_age_correlation
+    export_to_csv_task >> saving_churn_modelling_exited_salary_correlation
