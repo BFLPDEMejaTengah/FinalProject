@@ -1,4 +1,4 @@
-psycopg
+psycopg2
 pandas
 apache-airflow
 datetime
@@ -7,3 +7,4 @@ pandasql
 urllib3
 traceback2
 apache-airflow
+numpy
