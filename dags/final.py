@@ -37,27 +37,75 @@ with DAG('final',  # Name of the DAG
         python_callable=process_user,
         dag=dag
     )
-    creating_table = PostgresOperator(
-        task_id='creating_table',  # Task ID
+
+    creating_churn_modelling_table = PostgresOperator(
+        task_id='creating_churn_modelling_table',  # Task ID
         postgres_conn_id='airflow_postgres',  # Connection ID
         sql="""
-            CREATE TABLE IF NOT EXISTS churn_modelling 
-            (RowNumber INTEGER PRIMARY KEY, 
-            CustomerId INTEGER, 
-            Surname VARCHAR(50), 
-            CreditScore INTEGER, 
-            Geography VARCHAR(50), 
-            Gender VARCHAR(20), 
-            Age INTEGER, 
-            Tenure INTEGER, 
-            Balance FLOAT, 
-            NumOfProducts INTEGER, 
-            HasCrCard INTEGER, 
-            IsActiveMember INTEGER, 
-            EstimatedSalary FLOAT, 
-            Exited INTEGER
-            )
+            DROP TABLE IF EXISTS churn_modelling;
+            CREATE TABLE IF NOT EXISTS churn_modelling (
+                RowNumber INTEGER PRIMARY KEY, 
+                CustomerId INTEGER, 
+                Surname VARCHAR(50), 
+                CreditScore INTEGER, 
+                Geography VARCHAR(50), 
+                Gender VARCHAR(20), 
+                Age INTEGER, 
+                Tenure INTEGER, 
+                Balance FLOAT, 
+                NumOfProducts INTEGER, 
+                HasCrCard INTEGER, 
+                IsActiveMember INTEGER, 
+                EstimatedSalary FLOAT, 
+                Exited INTEGER
+            );
             """
+    )
+
+    # Define the PostgresOperator task
+    creating_churn_modelling_creditscore_table = PostgresOperator(
+        task_id='creating_churn_modelling_creditscore_table',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            DROP TABLE IF EXISTS churn_modelling_creditscore;
+            CREATE TABLE IF NOT EXISTS churn_modelling_creditscore (
+                geography VARCHAR(50), 
+                gender VARCHAR(20), 
+                avg_credit_score FLOAT, 
+                total_exited INTEGER
+            );
+        '''
+    )
+
+    # Define the PostgresOperator task
+    creating_churn_modelling_exited_age_correlation_table = PostgresOperator(
+        task_id='creating_churn_modelling_exited_age_correlation_table',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            DROP TABLE IF EXISTS churn_modelling_exited_age_correlation;
+            CREATE TABLE IF NOT EXISTS churn_modelling_exited_age_correlation (
+                geography VARCHAR(50), 
+                gender VARCHAR(20), 
+                exited INTEGER, 
+                avg_age FLOAT, 
+                avg_salary FLOAT,
+                number_of_exited_or_not INTEGER
+            );
+        '''
+    )
+
+    # Define the PostgresOperator task
+    creating_churn_modelling_exited_salary_correlation_table = PostgresOperator(
+        task_id='creating_churn_modelling_exited_salary_correlation_table',  # Task ID
+        postgres_conn_id='airflow_postgres',  # Connection ID
+        sql='''
+            DROP TABLE IF EXISTS churn_modelling_exited_salary_correlation;
+            CREATE TABLE IF NOT EXISTS churn_modelling_exited_salary_correlation  (
+                exited INTEGER, 
+                is_greater INTEGER, 
+                correlation INTEGER
+            );
+        '''
     )
 
     def store_user(**kwargs):
@@ -110,4 +158,7 @@ with DAG('final',  # Name of the DAG
     )
 
     # Set task dependencies
-    creating_table >> processing_user >> storing_user
+    creating_churn_modelling_table >> processing_user >> storing_user
+    creating_churn_modelling_creditscore_table >> processing_user
+    creating_churn_modelling_exited_age_correlation_table >> processing_user
+    creating_churn_modelling_exited_salary_correlation_table >> processing_user
