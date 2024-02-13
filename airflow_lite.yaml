@@ -3,7 +3,7 @@ version: '3.4'
 
 x-common:
   &common
-  image: apache/airflow:2.3.4
+  build: . 
   user: "${AIRFLOW_UID}:0"
   env_file: 
     - .env
@@ -11,6 +11,7 @@ x-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
+    - ./csv:/opt/airflow/csv
     - /var/run/docker.sock:/var/run/docker.sock
 
 x-depends-on:
