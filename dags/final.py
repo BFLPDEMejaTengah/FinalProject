@@ -21,7 +21,7 @@ with DAG('final',  # Name of the DAG
          catchup=False) as dag:  # No catchup
         # test
 
-    def process_user():
+    def getting_data():
         processed_user_list = []
         url = 'https://raw.githubusercontent.com/dogukannulu/datasets/master/Churn_Modelling.csv'
         response = requests.get(url)
@@ -32,9 +32,9 @@ with DAG('final',  # Name of the DAG
                 processed_user_list.append(row)
         return processed_user_list
 
-    processing_user = PythonOperator(
-        task_id="processing_user",
-        python_callable=process_user,
+    getting_data = PythonOperator(
+        task_id="getting_data",
+        python_callable=getting_data,
         dag=dag
     )
 
@@ -110,7 +110,7 @@ with DAG('final',  # Name of the DAG
 
     def store_user(**kwargs):
         task_instance = kwargs['task_instance']
-        processed_data_list = task_instance.xcom_pull(task_ids='processing_user')
+        processed_data_list = task_instance.xcom_pull(task_ids='getting_data')
 
         with psycopg2.connect(
             database="airflow",
@@ -158,7 +158,7 @@ with DAG('final',  # Name of the DAG
     )
 
     # Set task dependencies
-    creating_churn_modelling_table >> processing_user >> storing_user
-    creating_churn_modelling_creditscore_table >> processing_user
-    creating_churn_modelling_exited_age_correlation_table >> processing_user
-    creating_churn_modelling_exited_salary_correlation_table >> processing_user
+    creating_churn_modelling_table >> getting_data >> storing_user
+    creating_churn_modelling_creditscore_table >> getting_data
+    creating_churn_modelling_exited_age_correlation_table >> getting_data
+    creating_churn_modelling_exited_salary_correlation_table >> getting_data
