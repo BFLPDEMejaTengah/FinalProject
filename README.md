@@ -1,4 +1,4 @@
-# BFLP IT Bootcamp Data Management Final Project ft. HACKTIVE8
+# BFLP IT Bootcamp Data Management Final Project ft. HACKTIV8
 Colaborators:
 1. Andi Hafiidh
 2. Bimo Suryo Utomo
