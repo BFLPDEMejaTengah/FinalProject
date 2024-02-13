@@ -1,13 +1,10 @@
 from airflow.models import DAG
-from airflow.operators.http_operator import SimpleHttpOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.providers.http.sensors.http import HttpSensor
 from datetime import datetime, timedelta
 import csv
 import psycopg2
 import requests
-from datetime import datetime
 import pandas as pd
 
 # Define default arguments for the DAG
@@ -15,11 +12,33 @@ default_args = {
     'start_date': datetime(2024, 2, 4, 15, 6, 0) - timedelta(hours=7) # Start date for the DAG
 }
 
+#FUNCTION TO EXTRACT TABLE AND CONVER TO CSV
+def table_to_csv(table_name, csv_file_path, db_connection_params):
+
+    try:
+        # Connect to PostgreSQL database
+        conn = psycopg2.connect(**db_connection_params)
+
+        # Read SQL query into a DataFrame
+        df = pd.read_sql_query(f"SELECT * FROM {table_name};", conn)
+
+        # Export DataFrame to CSV
+        df.to_csv(csv_file_path, index=False)
+
+        print(f"Table '{table_name}' successfully exported to CSV: {csv_file_path}")
+
+    except (Exception, psycopg2.Error) as error:
+        print("Error exporting table to CSV:", error)
+
+    finally:
+        # Close database connection
+        if conn:
+            conn.close()
+
 with DAG('final',  # Name of the DAG
          schedule_interval='@daily',  # Schedule interval
          default_args=default_args,  # Default arguments
          catchup=False) as dag:  # No catchup
-        # test
 
     def getting_data():
         processed_user_list = []
@@ -122,6 +141,7 @@ with DAG('final',  # Name of the DAG
             with conn.cursor() as cur:
                 for user_data in processed_data_list:
                     sql_query = """
+                        
                         INSERT INTO churn_modelling (
                             RowNumber, CustomerId, Surname, CreditScore, Geography, Gender,
                             Age, Tenure, Balance, NumOfProducts, HasCrCard, IsActiveMember,
@@ -157,8 +177,26 @@ with DAG('final',  # Name of the DAG
         dag=dag
     )
 
+    ## TASK TO EXPORT TO CSV
+    export_to_csv_task = PythonOperator(
+        task_id="export_to_csv_task",
+        python_callable=table_to_csv,
+        op_kwargs={
+            'table_name': 'churn_modelling',
+            'csv_file_path': '/opt/airflow/csv/churn_modelling2.csv',
+            'db_connection_params': {
+                    'database': 'airflow',
+                    'user': 'airflow',
+                    'password': 'airflow',
+                    'host': 'postgres',
+                    'port': '5432'
+            }
+        },
+        dag=dag
+    )
+
     # Set task dependencies
-    creating_churn_modelling_table >> getting_data >> storing_user
+    creating_churn_modelling_table >> getting_data >> storing_user >> export_to_csv_task
     creating_churn_modelling_creditscore_table >> getting_data
     creating_churn_modelling_exited_age_correlation_table >> getting_data
     creating_churn_modelling_exited_salary_correlation_table >> getting_data
