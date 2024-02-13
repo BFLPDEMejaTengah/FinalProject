@@ -1,4 +1,11 @@
 # BFLP IT Bootcamp Data Management Final Project ft. HACKTIVE8
+Colaborators:
+1. Andi Hafiidh
+2. Bimo Suryo Utomo
+3. Lenny Raufi Syafitri
+4. Mukhlizar Nirwan Samsuri
+5. Raihan Mufid Setiadi
+
 
 # How to SETUP run the project
 1. use command `docker compose up -d` in terminal
