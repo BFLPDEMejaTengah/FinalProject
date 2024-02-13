@@ -1,10 +1,10 @@
-psycopg
-psycopg2
-pandas
 apache-airflow
 datetime
-requests
+numpy
+pandas
 pandasql
-urllib3
+psycopg
+psycopg2
+requests
 traceback2
-apache-airflow
+urllib3
