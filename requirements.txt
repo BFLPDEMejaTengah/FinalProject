@@ -1,9 +1,0 @@
-apache-airflow
-datetime
-numpy
-pandas
-pandasql
-psycopg2
-requests
-traceback2
-urllib3

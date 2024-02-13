@@ -3,7 +3,7 @@ version: '3.4'
 
 x-common:
   &common
-  build: . 
+  image: apache/airflow:2.3.4
   user: "${AIRFLOW_UID}:0"
   env_file: 
     - .env
@@ -11,21 +11,21 @@ x-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ./csv:/opt/airflow/csv
+    - shared-volume:/csv
     - /var/run/docker.sock:/var/run/docker.sock
 
 x-depends-on:
   &depends-on
   depends_on:
-    postgres-final:
+    postgres:
       condition: service_healthy
-    airflow-final-init:
+    airflow-init:
       condition: service_completed_successfully
 
 services:
-  postgres-final:
+  postgres:
     image: postgres:13
-    container_name: postgres-final
+    container_name: postgres
     ports:
       - "5434:5432"
     healthcheck:
@@ -34,11 +34,14 @@ services:
       retries: 5
     env_file:
       - .env
+    volumes:
+      - shared-volume:/csv
+
 
   scheduler:
     <<: [*common, *depends-on]
     # <<: *depends-on
-    container_name: airflow-final-scheduler
+    container_name: airflow-scheduler
     command: scheduler
     restart: on-failure
     ports:
@@ -48,7 +51,7 @@ services:
     <<: [*common, *depends-on]
     # <<: *common
     # <<: *depends-on
-    container_name: airflow-final-webserver
+    container_name: airflow-webserver
     restart: always
     command: webserver
     ports:
@@ -59,9 +62,9 @@ services:
       timeout: 30s
       retries: 5
   
-  airflow-final-init:
+  airflow-init:
     <<: *common
-    container_name: airflow-final-init
+    container_name: airflow-init
     entrypoint: /bin/bash
     command:
       - -c
@@ -69,3 +72,5 @@ services:
         mkdir -p /sources/logs /sources/dags /sources/plugins
         chown -R "${AIRFLOW_UID}:0" /sources/{logs,dags,plugins}
         exec /entrypoint airflow version
+volumes:
+  shared-volume:

@@ -172,7 +172,7 @@ with DAG('final',  # Name of the DAG
             DROP TABLE IF EXISTS churn_modelling_exited_salary_correlation;
             CREATE TABLE IF NOT EXISTS churn_modelling_exited_salary_correlation  (
                 exited INTEGER, 
-                is_greater INTEGER, 
+                is_greater BOOLEAN, 
                 correlation INTEGER
             );
         '''
@@ -234,7 +234,7 @@ with DAG('final',  # Name of the DAG
         python_callable=table_to_csv,
         op_kwargs={
             'table_name': 'churn_modelling',
-            'csv_file_path': '/opt/airflow/csv/',
+            'csv_file_path': '/csv/',
             'db_connection_params': {
                     'database': 'airflow',
                     'user': 'airflow',
@@ -252,7 +252,7 @@ with DAG('final',  # Name of the DAG
         task_id='saving_churn_modelling_creditscore_table',  # Task ID
         postgres_conn_id='airflow_postgres',  # Connection ID
         sql='''
-            COPY churn_modelling_creditscore FROM '/opt/airflow/csv/churn_modelling_creditscore.csv' DELIMITER ','
+            COPY churn_modelling_creditscore FROM '/csv/churn_modelling_creditscore.csv' DELIMITER ','
             CSV HEADER;
         '''
     )
@@ -262,7 +262,7 @@ with DAG('final',  # Name of the DAG
         task_id='saving_churn_modelling_exited_age_correlation',  # Task ID
         postgres_conn_id='airflow_postgres',  # Connection ID
         sql='''
-            COPY churn_modelling_exited_age_correlation FROM '/opt/airflow/csv/churn_modelling_exited_age_correlation.csv' DELIMITER ','
+            COPY churn_modelling_exited_age_correlation FROM '/csv/churn_modelling_exited_age_correlation.csv' DELIMITER ','
             CSV HEADER;
         '''
     )
@@ -273,7 +273,7 @@ with DAG('final',  # Name of the DAG
         task_id='saving_churn_modelling_exited_salary_correlation',  # Task ID
         postgres_conn_id='airflow_postgres',  # Connection ID
         sql='''
-            COPY churn_modelling_exited_salary_correlation FROM '/opt/airflow/csv/churn_modelling_exited_salary_correlation.csv' DELIMITER ','
+            COPY churn_modelling_exited_salary_correlation FROM '/csv/churn_modelling_exited_salary_correlation.csv' DELIMITER ','
             CSV HEADER;
         '''
     )
